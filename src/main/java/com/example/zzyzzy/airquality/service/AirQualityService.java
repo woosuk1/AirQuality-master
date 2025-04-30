@@ -1,6 +1,8 @@
 package com.example.zzyzzy.airquality.service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -15,11 +17,12 @@ import java.net.URLEncoder;
 public class AirQualityService {
 
     // API serviceKey 변수 선언
+    @Value("${app.serviceKey}")
     private String serviceKey;
 
     // data.go.kr로 부터 미세먼지 정보를 가져옴
     public String getAirQualityDataBasic(String sidoName) throws IOException {
-        serviceKey = System.getenv("app.serviceKey");
+        // serviceKey = System.getenv("app.serviceKey");
 
         // API 요청을 위해 URL 구성
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"); /*URL*/
@@ -38,11 +41,18 @@ public class AirQualityService {
         System.out.println("Response code: " + conn.getResponseCode());
 
         // 응답코드가 200이라면 문자 스트림을 이용해서 데이터를 받아옴
+        // BufferedReader rd;
+        // if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+        //     rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        // } else {
+        //     rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+        // }
+
         BufferedReader rd;
-        if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
-            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+            rd = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
         } else {
-            rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+            rd = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
         }
 
         // 버퍼에 저장된 데이터를 하나씩 꺼내 문자열변수에 저장
