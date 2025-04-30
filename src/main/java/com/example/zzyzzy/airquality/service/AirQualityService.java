@@ -17,7 +17,7 @@ import java.net.URLEncoder;
 public class AirQualityService {
 
     // API serviceKey 변수 선언
-    @Value("${app.serviceKey}")
+    @Value("${servicekey}")
     private String serviceKey;
 
     // data.go.kr로 부터 미세먼지 정보를 가져옴
@@ -38,7 +38,8 @@ public class AirQualityService {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
-        System.out.println("Response code: " + conn.getResponseCode());
+        // System.out.println("Response code: " + conn.getResponseCode());
+        log.info("Response code: {}", conn.getResponseCode());
 
         // 응답코드가 200이라면 문자 스트림을 이용해서 데이터를 받아옴
         // BufferedReader rd;
