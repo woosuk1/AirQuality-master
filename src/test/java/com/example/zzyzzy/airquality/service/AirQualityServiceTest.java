@@ -1,10 +1,12 @@
-package com.example.zzyzzy.airquality;
+package com.example.zzyzzy.airquality.service;
 
 import com.example.zzyzzy.airquality.service.AirQualityService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 
@@ -13,10 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AirQualityServiceTest {
 
     private AirQualityService airQualityService;
+    private RestTemplate restTemplate;
+    private WebClient webClient;
 
     @BeforeEach
     public void setUp() {
-        airQualityService = new AirQualityService(null);
+        // airQualityService = new AirQualityService(restTemplate, webClient);
+        airQualityService = new AirQualityService(restTemplate, webClient);
     }
 
     @Test

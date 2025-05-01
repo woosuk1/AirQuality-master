@@ -1,9 +1,7 @@
 package com.example.zzyzzy.airquality.service;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -36,13 +35,11 @@ public class AirQualityService {
     @Value("${servicekey}")
     private String serviceKey;
     private final RestTemplate restTemplate;
+    private final WebClient webClient;
 
-    public AirQualityService() {
-        this.restTemplate = new RestTemplate();
-    }
-
-    public AirQualityService(RestTemplate restTemplate) {
+    public AirQualityService(RestTemplate restTemplate, WebClient webClient) {
         this.restTemplate = restTemplate;
+        this.webClient = webClient;
     }
 
     // data.go.kr로 부터 미세먼지 정보를 가져옴
@@ -108,7 +105,7 @@ public class AirQualityService {
     // getAirQualityDataBasic 개선 - RestTemplate
     public String getAirQualityDataRest(String sidoName) throws IOException, URISyntaxException {
 
-        String encodedSidoName = URLEncoder.encode("서울", StandardCharsets.UTF_8);
+        String encodedSidoName = URLEncoder.encode(sidoName, StandardCharsets.UTF_8);
         String path = "/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
         
         DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory();
@@ -140,9 +137,27 @@ public class AirQualityService {
         return responseBody;
     }
 
-    // getAirQualityDataRest 개선 - WebClient
-    public String getAirQualityDataReactive(String sidoName) throws IOException {
-        return null;
+    // getAirQualityDataReactive 개선 - WebClient
+    public Mono<String> getAirQualityDataReactive(String sidoName) throws IOException {
+        String encodedSidoName = URLEncoder.encode(sidoName, StandardCharsets.UTF_8);
+        String path = "/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
+
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("http")
+                        .host("apis.data.go.kr")
+                        .path(path)
+                        .queryParam("serviceKey", serviceKey)
+                        .queryParam("returnType", "json")
+                        .queryParam("numOfRows", "100")
+                        .queryParam("pageNo", "1")
+                        .queryParam("sidoName", encodedSidoName)
+                        .queryParam("ver", "1.0")
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnError(error -> log.error("WebClient Error: ", error));
     }
+
 
 }

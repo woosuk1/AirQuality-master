@@ -1,4 +1,4 @@
-package com.example.zzyzzy.airquality;
+package com.example.zzyzzy.airquality.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;

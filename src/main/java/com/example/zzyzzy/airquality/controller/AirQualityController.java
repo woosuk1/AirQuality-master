@@ -1,6 +1,9 @@
 package com.example.zzyzzy.airquality.controller;
 
 import com.example.zzyzzy.airquality.service.AirQualityService;
+
+import reactor.core.publisher.Mono;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +37,14 @@ public class AirQualityController {
         model.addAttribute("airQualityData", result);
 
         return "airQuality";
+    }
+
+    @GetMapping("/webclient")
+    public String webClient(@RequestParam(defaultValue = "서울") String sidoName, Model model) throws IOException {
+        String result = airQualityService.getAirQualityDataReactive(sidoName).block(); // 주의: 블로킹
+        model.addAttribute("airQualityData", result);
+
+        return "airQuality"; // 예: airQuality.html
     }
 
 
