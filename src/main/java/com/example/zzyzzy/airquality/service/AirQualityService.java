@@ -1,16 +1,32 @@
 package com.example.zzyzzy.airquality.service;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.net.URLDecoder;
 
 @Slf4j
 @Service
@@ -19,11 +35,20 @@ public class AirQualityService {
     // API serviceKey 변수 선언
     @Value("${servicekey}")
     private String serviceKey;
+    private final RestTemplate restTemplate;
+
+    public AirQualityService() {
+        this.restTemplate = new RestTemplate();
+    }
+
+    public AirQualityService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     // data.go.kr로 부터 미세먼지 정보를 가져옴
     public String getAirQualityDataBasic(String sidoName) throws IOException {
         // serviceKey = System.getenv("app.serviceKey");
-
+        
         // API 요청을 위해 URL 구성
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"); /*URL*/
         urlBuilder.append("?").append(URLEncoder.encode("serviceKey","UTF-8")).append("=").append(serviceKey); /*Service Key*/
@@ -32,6 +57,11 @@ public class AirQualityService {
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
         urlBuilder.append("&" + URLEncoder.encode("sidoName","UTF-8") + "=" + URLEncoder.encode(sidoName, "UTF-8")); /*시도 이름(전국, 서울, 부산, 대구, 인천, 광주, 대전, 울산, 경기, 강원, 충북, 충남, 전북, 전남, 경북, 경남, 제주, 세종)*/
         urlBuilder.append("&" + URLEncoder.encode("ver","UTF-8") + "=" + URLEncoder.encode("1.0", "UTF-8")); /*버전별 상세 결과 참고*/
+
+        // String baseUrl = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
+        // String query = "returnType=json&numOfRows=100&pageNo=1&serviceKey=" + serviceKey + "&sidoName=" + sidoName + "&ver=1.0";
+
+        // URI uri = new URI(baseUrl, query, null);
 
         // HTTP 연결 후 응답코드 확인
         URL url = new URL(urlBuilder.toString());
@@ -76,8 +106,38 @@ public class AirQualityService {
     }
 
     // getAirQualityDataBasic 개선 - RestTemplate
-    public String getAirQualityDataRest(String sidoName) throws IOException {
-        return null;
+    public String getAirQualityDataRest(String sidoName) throws IOException, URISyntaxException {
+
+        String encodedSidoName = URLEncoder.encode("서울", StandardCharsets.UTF_8);
+        String path = "/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
+        
+        DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory();
+        uriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+        
+        String uriString = uriBuilderFactory.builder()
+                .scheme("http")
+                .host("apis.data.go.kr")
+                .path(path)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("returnType", "json")
+                .queryParam("numOfRows", "100")
+                .queryParam("pageNo", "1")
+                .queryParam("sidoName", encodedSidoName)
+                .queryParam("ver", "1.0")
+                .build()
+                .toString();
+
+        // URI uri = URI.create(baseUrl + query);
+        URI uri = URI.create(uriString);
+
+        log.info("api url: {}", uriString);
+        // API 요청 보내기
+        ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
+
+        log.info("jsonResponse: {}", response.getBody());
+        String responseBody = response.getBody();
+
+        return responseBody;
     }
 
     // getAirQualityDataRest 개선 - WebClient

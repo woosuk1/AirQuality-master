@@ -16,7 +16,7 @@ public class AirQualityServiceTest {
 
     @BeforeEach
     public void setUp() {
-        airQualityService = new AirQualityService();
+        airQualityService = new AirQualityService(null);
     }
 
     @Test

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 @Controller
 public class AirQualityController {
@@ -25,5 +26,15 @@ public class AirQualityController {
 
         return "airQuality";
     }
+
+    
+    @GetMapping("/rest")
+    public String rest(@RequestParam(defaultValue = "서울") String sidoName, Model model) throws IOException, URISyntaxException {
+        String result = airQualityService.getAirQualityDataRest(sidoName);
+        model.addAttribute("airQualityData", result);
+
+        return "airQuality";
+    }
+
 
 }
